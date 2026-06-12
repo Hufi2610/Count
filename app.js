@@ -432,12 +432,14 @@ function handleScan(code) {
     stopScanner();
 }
 
-async function startScanner() {
+let codeReader = null;
+
+async function startScanner(){
 
     if(scannerRunning)
         return;
 
-    try {
+    try{
 
         scannerRunning = true;
 
@@ -448,8 +450,21 @@ async function startScanner() {
 
         videoElement.style.width = "100%";
         videoElement.style.height = "100%";
-        videoElement.autoplay = true;
-        videoElement.playsInline = true;
+
+        videoElement.setAttribute(
+            "autoplay",
+            true
+        );
+
+        videoElement.setAttribute(
+            "playsinline",
+            true
+        );
+
+        videoElement.setAttribute(
+            "muted",
+            true
+        );
 
         scannerViewport.appendChild(
             videoElement
@@ -458,9 +473,35 @@ async function startScanner() {
         codeReader =
         new ZXingBrowser.BrowserMultiFormatReader();
 
+        const devices =
+        await ZXingBrowser.BrowserCodeReader
+        .listVideoInputDevices();
+
+        console.log(
+            "CAMERAS:",
+            devices
+        );
+
+        let selectedDeviceId =
+        devices[0]?.deviceId;
+
+        const backCamera =
+        devices.find(device =>
+            /back|rear|environment/i.test(
+                device.label
+            )
+        );
+
+        if(backCamera){
+
+            selectedDeviceId =
+            backCamera.deviceId;
+
+        }
+
         scannerControls =
         await codeReader.decodeFromVideoDevice(
-            null,
+            selectedDeviceId,
             videoElement,
             (result, err) => {
 
@@ -470,13 +511,25 @@ async function startScanner() {
                     result.getText();
 
                     console.log(
-                        "SCAN:",
+                        "SCAN SUCCESS:",
                         code
                     );
 
                     handleScan(code);
 
                     closeScanner();
+
+                    return;
+
+                }
+
+                if(
+                    err &&
+                    err.name !==
+                    "NotFoundException"
+                ){
+
+                    console.error(err);
 
                 }
 
