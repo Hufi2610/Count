@@ -511,29 +511,27 @@ tbody tr:hover{
 
 .btn-close-scanner{
 
-    position:absolute;
+    position: absolute;
 
-    bottom:20px;
+    top: 12px;
 
-    left:50%;
+    right: 12px;
 
-    transform:translateX(-50%);
+    width: 44px;
 
-    padding:
+    height: 44px;
 
-    12px 20px;
+    border-radius: 50%;
 
-    border:none;
+    border: none;
 
-    border-radius:8px;
+    background: rgba(0,0,0,.7);
 
-    background:#ef4444;
+    color: #fff;
 
-    color:white;
+    font-size: 22px;
 
-    font-weight:700;
-
-    cursor:pointer;
+    z-index: 9999;
 
 }
 
