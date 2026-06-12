@@ -6,6 +6,8 @@ let historyData = [];
 let selectedProduct = null;
 let editingId = null;
 
+let html5QrCode = null;
+
 let scannerTarget = null;
 let scannerControls = null;
 let scannerRunning = false;
@@ -416,24 +418,28 @@ function openScanner(target) {
     startScanner();
 }
 
-function closeScanner() {
+async function closeScanner(){
 
-    scannerOverlay.classList.add("hidden");
-    stopScanner();
+    scannerOverlay.classList.add(
+        "hidden"
+    );
+
+    await stopScanner();
+
 }
 
-function handleScan(code) {
-    if (!scannerTarget) return;
+function handleScan(code){
+
+    if(!scannerTarget)
+        return;
 
     scannerTarget.value = code;
 
-    searchBarcode(code);
+    scannerTarget.dispatchEvent(
+        new Event("input")
+    );
 
-    stopScanner();
 }
-
-let codeReader = null;
-
 async function startScanner(){
 
     if(scannerRunning)
@@ -443,97 +449,38 @@ async function startScanner(){
 
         scannerRunning = true;
 
-        scannerViewport.innerHTML = "";
+        scannerViewport.innerHTML =
+        '<div id="reader" style="width:100%;height:100%"></div>';
 
-        const videoElement =
-        document.createElement("video");
+        html5QrCode =
+        new Html5Qrcode("reader");
 
-        videoElement.style.width = "100%";
-        videoElement.style.height = "100%";
+        await html5QrCode.start(
 
-        videoElement.setAttribute(
-            "autoplay",
-            true
-        );
+            {
+                facingMode: "environment"
+            },
 
-        videoElement.setAttribute(
-            "playsinline",
-            true
-        );
+            {
+                fps: 10,
+                qrbox: 250,
+                aspectRatio: 1
+            },
 
-        videoElement.setAttribute(
-            "muted",
-            true
-        );
+            (decodedText) => {
 
-        scannerViewport.appendChild(
-            videoElement
-        );
+                console.log(
+                    "SCAN:",
+                    decodedText
+                );
 
-        codeReader =
-        new ZXingBrowser.BrowserMultiFormatReader();
+                handleScan(
+                    decodedText
+                );
 
-        const devices =
-        await ZXingBrowser.BrowserCodeReader
-        .listVideoInputDevices();
-
-        console.log(
-            "CAMERAS:",
-            devices
-        );
-
-        let selectedDeviceId =
-        devices[0]?.deviceId;
-
-        const backCamera =
-        devices.find(device =>
-            /back|rear|environment/i.test(
-                device.label
-            )
-        );
-
-        if(backCamera){
-
-            selectedDeviceId =
-            backCamera.deviceId;
-
-        }
-
-        scannerControls =
-        await codeReader.decodeFromVideoDevice(
-            selectedDeviceId,
-            videoElement,
-            (result, err) => {
-
-                if(result){
-
-                    const code =
-                    result.getText();
-
-                    console.log(
-                        "SCAN SUCCESS:",
-                        code
-                    );
-
-                    handleScan(code);
-
-                    closeScanner();
-
-                    return;
-
-                }
-
-                if(
-                    err &&
-                    err.name !==
-                    "NotFoundException"
-                ){
-
-                    console.error(err);
-
-                }
-
+                closeScanner();
             }
+
         );
 
     }
@@ -545,6 +492,10 @@ async function startScanner(){
         );
 
         scannerRunning = false;
+
+        alert(
+            "Không mở được camera"
+        );
 
     }
 
@@ -567,16 +518,33 @@ document
     });
 
 });
-function stopScanner(codeReader) {
+async function stopScanner(){
 
-    try {
-        if (scannerControls) scannerControls.stop();
-    } catch (e) {}
+    try{
+
+        if(html5QrCode){
+
+            await html5QrCode.stop();
+
+            await html5QrCode.clear();
+
+            html5QrCode = null;
+
+        }
+
+    }
+    catch(err){
+
+        console.error(err);
+
+    }
 
     scannerViewport.innerHTML = "";
 
     scannerRunning = false;
+
     scannerTarget = null;
+
 }
 btnCloseScanner.addEventListener(
 "click",
