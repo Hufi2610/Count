@@ -455,16 +455,26 @@ async function startScanner() {
         const selectedDeviceId =
             devices.length > 0 ? devices[0].deviceId : null;
 
-        scannerControls = await codeReader.decodeFromVideoDevice(
-            selectedDeviceId,
-            videoElement,
-            (result, err) => {
+        scannerControls =
+await codeReader.decodeFromConstraints(
+{
+    video: {
+        facingMode: "environment"
+    }
+},
+videoElement,
+(result, err) => {
 
-                if (result) {
-                    handleScan(result.getText());
-                }
-            }
+    if(result){
+
+        handleScan(
+            result.getText()
         );
+
+    }
+
+}
+);
 
     } catch (err) {
         console.error("Camera error:", err);
