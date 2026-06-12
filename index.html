@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Count Hàng</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- FORM -->
+
+    <div class="form-section">
+
+        <h2>Nhập Thông Tin Sản Phẩm</h2>
+
+        <form
+            id="entryForm"
+            autocomplete="off">
+
+            <!-- ID ẨN -->
+
+            <div class="form-group hidden-id">
+
+                <label>ID</label>
+
+                <input
+                    type="text"
+                    id="entryId"
+                    readonly>
+
+            </div>
+
+            <!-- LOCATION -->
+
+            <div class="form-group">
+
+                <label>
+                    Vị trí
+                </label>
+
+                <div class="input-with-btn">
+
+                    <input
+                        type="text"
+                        id="location"
+                        placeholder="BB-032-01"
+                        required>
+
+                    <button
+                        type="button"
+                        class="btn-scan"
+                        data-target="location">
+
+                        Quét
+
+                    </button>
+
+                </div>
+
+                <small
+                    id="locationError"
+                    class="error-msg">
+
+                    Định dạng:
+                    BB-032-01
+
+                </small>
+
+            </div>
+
+            <!-- BARCODE -->
+
+            <div class="form-group">
+
+                <label>
+                    Barcode
+                </label>
+
+                <div class="input-with-btn">
+
+                    <input
+                        type="text"
+                        id="barcode"
+                        placeholder="Scan barcode">
+
+                    <button
+                        type="button"
+                        class="btn-scan"
+                        data-target="barcode">
+
+                        Quét
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- PRODUCT INFO -->
+
+            <div class="product-info-box">
+
+                <p>
+
+                    <strong>
+                        Mã sản phẩm:
+                    </strong>
+
+                    <span id="txtProductCode">
+
+                        ---
+
+                    </span>
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        Diễn giải:
+                    </strong>
+
+                    <span id="txtProductDesc">
+
+                        ---
+
+                    </span>
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        Quy cách:
+                    </strong>
+
+                    <span id="txtSpecification">
+
+                        ---
+
+                    </span>
+
+                </p>
+
+            </div>
+
+            <!-- QTY -->
+
+            <div class="form-group">
+
+                <label>
+
+                    Số lượng EA
+
+                </label>
+
+                <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    id="quantityEa">
+
+            </div>
+
+            <!-- CS -->
+
+            <div class="form-group">
+
+                <label>
+
+                    Quy đổi CS
+
+                </label>
+
+                <div
+                    id="txtQuantityCs"
+                    class="converted-cs">
+
+                    0 CS
+
+                </div>
+
+            </div>
+
+            <!-- EXP -->
+
+            <div class="form-group">
+
+                <label>
+
+                    Hạn sử dụng
+                    (ddmmyyyy)
+
+                </label>
+
+                <input
+                    type="text"
+                    maxlength="8"
+                    id="expiryDate"
+                    placeholder="31122025">
+
+                <div
+                    id="datePreview"
+                    class="date-preview">
+
+                    --.--.----
+
+                </div>
+
+                <small
+                    id="dateError"
+                    class="error-msg">
+
+                    Sai định dạng ngày
+
+                </small>
+
+            </div>
+
+            <!-- BUTTONS -->
+
+            <div class="btn-group">
+
+                <button
+                    type="submit"
+                    class="btn-primary">
+
+                    Lưu
+
+                </button>
+
+                <button
+                    type="button"
+                    id="btnCancel"
+                    class="btn-secondary">
+
+                    Hủy
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- LIST -->
+
+    <div class="list-section">
+
+        <h2>
+
+            20 Dòng Gần Nhất
+
+        </h2>
+
+        <div class="table-responsive">
+
+            <table>
+
+                <thead>
+
+                <tr>
+
+                    <th>
+                        Location
+                    </th>
+
+                    <th>
+                        Article
+                    </th>
+
+                    <th>
+                        Description
+                    </th>
+
+                    <th>
+                        Qty
+                    </th>
+
+                    <th>
+                        CS Qty
+                    </th>
+
+                    <th>
+                        EXP
+                    </th>
+
+                </tr>
+
+                </thead>
+
+                <tbody
+                    id="recentEntriesTable">
+
+                    <tr>
+
+                        <td colspan="6">
+
+                            Chưa có dữ liệu
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SCANNER OVERLAY -->
+
+<div
+    id="scannerOverlay"
+    class="scanner-overlay hidden">
+
+    <div class="scanner-container">
+
+        <div id="scannerViewport"></div>
+
+        <div
+            class="scanner-laser">
+
+        </div>
+
+        <p
+            class="scanner-tip">
+
+            Đưa barcode vào giữa khung
+
+        </p>
+
+        <button
+            id="btnCloseScanner"
+            class="btn-close-scanner">
+
+            Đóng Camera
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- SCROLL TOP -->
+
+<button
+    id="btnScrollTop"
+    class="scroll-top hidden">
+
+    ↑
+
+</button>
+
+<!-- QUAGGA -->
+
+<script src="https://unpkg.com/@zxing/browser@latest"></script>
+
+<!-- APP -->
+
+<script src="app.js"></script>
+
+</body>
+
+</html>

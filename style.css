@@ -1,0 +1,674 @@
+/* =========================
+   RESET
+========================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+
+    font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+
+    background:#f4f6f9;
+
+    color:#333;
+
+    padding:16px;
+
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.container{
+
+    max-width:1600px;
+
+    margin:auto;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+.form-section,
+.list-section{
+
+    background:#fff;
+
+    border-radius:10px;
+
+    padding:20px;
+
+    box-shadow:
+    0 2px 10px
+    rgba(0,0,0,.05);
+
+}
+
+h2{
+
+    margin-bottom:16px;
+
+    color:#1e293b;
+
+    padding-bottom:10px;
+
+    border-bottom:
+    2px solid #e2e8f0;
+
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-group{
+
+    margin-bottom:15px;
+
+}
+
+label{
+
+    display:block;
+
+    margin-bottom:6px;
+
+    font-weight:600;
+
+    font-size:.92rem;
+
+}
+
+input[type=text],
+input[type=number]{
+
+    width:100%;
+
+    height:42px;
+
+    border:
+
+    1px solid #cbd5e1;
+
+    border-radius:6px;
+
+    padding:0 12px;
+
+    outline:none;
+
+    transition:.2s;
+
+    font-size:15px;
+
+}
+
+input:focus{
+
+    border-color:#2563eb;
+
+}
+
+.input-error{
+
+    border-color:#ef4444 !important;
+
+    background:#fff5f5;
+
+}
+
+/* =========================
+   INPUT + BUTTON
+========================= */
+
+.input-with-btn{
+
+    display:flex;
+
+    gap:8px;
+
+}
+
+.input-with-btn input{
+
+    flex:1;
+
+}
+
+.btn-scan{
+
+    min-width:90px;
+
+    border:none;
+
+    border-radius:6px;
+
+    background:#10b981;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+}
+
+.btn-scan:hover{
+
+    background:#059669;
+
+}
+
+/* =========================
+   PRODUCT BOX
+========================= */
+
+.product-info-box{
+
+    background:#f8fafc;
+
+    border:
+    1px dashed #cbd5e1;
+
+    border-radius:8px;
+
+    padding:12px;
+
+    margin-bottom:16px;
+
+}
+
+.product-info-box p{
+
+    margin-bottom:8px;
+
+    word-break:break-word;
+
+}
+
+.product-info-box p:last-child{
+
+    margin-bottom:0;
+
+}
+
+/* =========================
+   CS DISPLAY
+========================= */
+
+.converted-cs{
+
+    font-size:1.2rem;
+
+    font-weight:700;
+
+    color:#2563eb;
+
+}
+
+/* =========================
+   DATE PREVIEW
+========================= */
+
+.date-preview{
+
+    margin-top:8px;
+
+    font-weight:600;
+
+    color:#0f172a;
+
+}
+
+.error-msg{
+
+    display:none;
+
+    color:#ef4444;
+
+    font-size:.8rem;
+
+    margin-top:4px;
+
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn-group{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:20px;
+
+}
+
+.btn-primary,
+.btn-secondary{
+
+    flex:1;
+
+    height:44px;
+
+    border:none;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    font-weight:700;
+
+}
+
+.btn-primary{
+
+    background:#2563eb;
+
+    color:white;
+
+}
+
+.btn-primary:hover{
+
+    background:#1d4ed8;
+
+}
+
+.btn-secondary{
+
+    background:#e2e8f0;
+
+}
+
+.btn-secondary:hover{
+
+    background:#cbd5e1;
+
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-responsive{
+
+    overflow:auto;
+
+    max-height:80vh;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+thead{
+
+    position:sticky;
+
+    top:0;
+
+    z-index:5;
+
+}
+
+th{
+
+    background:#f8fafc;
+
+    color:#0f172a;
+
+    text-align:left;
+
+}
+
+th,
+td{
+
+    padding:12px;
+
+    border-bottom:
+
+    1px solid #e2e8f0;
+
+    white-space:nowrap;
+
+}
+
+tbody tr{
+
+    cursor:pointer;
+
+    transition:.15s;
+
+}
+
+tbody tr:hover{
+
+    background:#eff6ff;
+
+}
+
+/* dòng đang edit */
+
+.history-row.editing{
+
+    background:#dbeafe !important;
+
+}
+
+/* =========================
+   HIDDEN ID
+========================= */
+
+.hidden-id{
+
+    display:none;
+
+}
+
+/* =========================
+   SCANNER
+========================= */
+
+.scanner-overlay{
+
+    position:fixed;
+
+    inset:0;
+
+    width:100vw;
+
+    height:100vh;
+
+    background:
+    rgba(0,0,0,.95);
+
+    z-index:99999;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.scanner-overlay.hidden{
+
+    display:none;
+
+}
+
+.scanner-container{
+
+    width:100vw;
+
+    height:100vh;
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+#scannerViewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+#scannerViewport video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
+.scanner-laser{
+
+    position:absolute;
+
+    left:5%;
+
+    width:90%;
+
+    height:3px;
+
+    background:#ef4444;
+
+    box-shadow:
+
+    0 0 10px #ef4444;
+
+    animation:
+    laserMove 2s infinite;
+
+}
+
+@keyframes laserMove{
+
+    0%{
+
+        top:20%;
+
+    }
+
+    50%{
+
+        top:75%;
+
+    }
+
+    100%{
+
+        top:20%;
+
+    }
+
+}
+
+.scanner-tip{
+
+    position:absolute;
+
+    bottom:90px;
+
+    width:100%;
+
+    text-align:center;
+
+    color:white;
+
+    font-size:14px;
+
+}
+
+.btn-close-scanner{
+
+    position:absolute;
+
+    bottom:20px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    padding:
+
+    12px 20px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#ef4444;
+
+    color:white;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+}
+
+/* =========================
+   SCROLL TOP
+========================= */
+
+.scroll-top{
+
+    position:fixed;
+
+    right:20px;
+
+    bottom:20px;
+
+    width:48px;
+
+    height:48px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#10b981;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    z-index:9999;
+
+    box-shadow:
+    0 4px 12px
+    rgba(0,0,0,.2);
+
+}
+
+.scroll-top.hidden{
+
+    display:none;
+
+}
+
+/* =========================
+   LOADING SAVE
+========================= */
+
+.btn-primary.loading{
+
+    pointer-events:none;
+
+    opacity:.7;
+
+}
+
+.btn-primary.loading::after{
+
+    content:" ...";
+
+}
+
+/* =========================
+   DESKTOP
+========================= */
+
+@media(min-width:992px){
+
+    .container{
+
+        flex-direction:row;
+
+        align-items:flex-start;
+
+    }
+
+    .form-section{
+
+        width:420px;
+
+        position:sticky;
+
+        top:16px;
+
+    }
+
+    .list-section{
+
+        flex:1;
+
+    }
+
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:991px){
+
+    body{
+
+        padding:10px;
+
+    }
+
+    .container{
+
+        flex-direction:column;
+
+    }
+
+    .form-section,
+    .list-section{
+
+        width:100%;
+
+    }
+
+    th,
+    td{
+
+        font-size:13px;
+
+        padding:10px;
+
+    }
+
+    .btn-scan{
+
+        min-width:70px;
+
+    }
+
+}
