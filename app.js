@@ -433,53 +433,68 @@ function handleScan(code) {
 }
 
 async function startScanner() {
-    if (scannerRunning) return;
+
+    if(scannerRunning)
+        return;
 
     try {
+
         scannerRunning = true;
 
         scannerViewport.innerHTML = "";
 
-        const videoElement = document.createElement("video");
+        const videoElement =
+        document.createElement("video");
+
         videoElement.style.width = "100%";
         videoElement.style.height = "100%";
-        videoElement.setAttribute("playsinline", true);
         videoElement.autoplay = true;
+        videoElement.playsInline = true;
 
-        scannerViewport.appendChild(videoElement);
+        scannerViewport.appendChild(
+            videoElement
+        );
 
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-
-        const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-
-        const selectedDeviceId =
-            devices.length > 0 ? devices[0].deviceId : null;
+        codeReader =
+        new ZXingBrowser.BrowserMultiFormatReader();
 
         scannerControls =
-await codeReader.decodeFromConstraints(
-{
-    video: {
-        facingMode: "environment"
-    }
-},
-videoElement,
-(result, err) => {
+        await codeReader.decodeFromVideoDevice(
+            null,
+            videoElement,
+            (result, err) => {
 
-    if(result){
+                if(result){
 
-        handleScan(
-            result.getText()
+                    const code =
+                    result.getText();
+
+                    console.log(
+                        "SCAN:",
+                        code
+                    );
+
+                    handleScan(code);
+
+                    closeScanner();
+
+                }
+
+            }
         );
 
     }
+    catch(err){
 
-}
-);
+        console.error(
+            "Scanner Error:",
+            err
+        );
 
-    } catch (err) {
-        console.error("Camera error:", err);
         scannerRunning = false;
+
     }
+
 }
 document
 .querySelectorAll(".btn-scan")
