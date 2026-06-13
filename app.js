@@ -9,13 +9,8 @@ let editingId = null;
 let html5QrCode = null;
 
 let scannerTarget = null;
-let scannerControls = null;
 let scannerRunning = false;
-
 let currentVersion = 0;
-
-let isSaving = false;
-
 let DEVICE_ID =
 localStorage.getItem("DEVICE_ID");
 
@@ -395,7 +390,6 @@ async function loadLatest(){
     }
 
 }
-console.log(historyData);
 function startRealtimePolling(){
 
     setInterval(
@@ -838,10 +832,6 @@ function bindHistoryClick(){
     .forEach(row=>{
 
         row.onclick = () => {
-
-            const id =
-            row.dataset.id;
-
             const item = historyData.find(
                 x => String(x.id) === String(row.dataset.id)
             );
