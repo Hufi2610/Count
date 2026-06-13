@@ -509,30 +509,37 @@ tbody tr:hover{
 
 }
 
-.btn-close-scanner{
+.scanner-close-btn {
 
     position: absolute;
-
-    top: 12px;
-
-    right: 12px;
+    top: 16px;
+    right: 16px;
 
     width: 44px;
-
     height: 44px;
 
+    border: none;
     border-radius: 50%;
 
-    border: none;
+    background: rgba(0,0,0,0.6);
+    color: white;
 
-    background: rgba(0,0,0,.7);
+    font-size: 26px;
+    font-weight: 700;
 
-    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    font-size: 22px;
+    cursor: pointer;
 
-    z-index: 9999;
+    z-index: 999999;
 
+    backdrop-filter: blur(6px);
+}
+
+.scanner-close-btn:active {
+    transform: scale(0.92);
 }
 
 /* =========================
@@ -669,4 +676,48 @@ tbody tr:hover{
 
     }
 
+}
+.popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.popup.hidden {
+    display: none;
+}
+
+.popup-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    text-align: center;
+}
+
+.popup-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.popup-actions button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#btnCancelDelete {
+    background: #e5e7eb;
+}
+
+#btnConfirmDelete {
+    background: #ef4444;
+    color: white;
 }
