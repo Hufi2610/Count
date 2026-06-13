@@ -309,6 +309,7 @@
 
                         <td colspan="6">
 
+                            Chưa có dữ liệu
 
                         </td>
 
@@ -348,9 +349,9 @@
 
         <button
             id="btnCloseScanner"
-            class="btn-close-scanner">
+            class="scanner-close-btn">
 
-            ✕
+            ×
 
         </button>
 
@@ -368,8 +369,17 @@
 
 </button>
 
-<!-- QUAGGA -->
+<div id="deletePopup" class="popup hidden">
+    <div class="popup-box">
+        <h3>Xóa dòng này?</h3>
+        <p id="popupInfo">---</p>
 
+        <div class="popup-actions">
+            <button id="btnConfirmDelete">Xóa</button>
+            <button id="btnCancelDelete">Hủy</button>
+        </div>
+    </div>
+</div>
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <!-- APP -->
