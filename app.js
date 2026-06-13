@@ -62,6 +62,14 @@ document.getElementById("datePreview");
 const recentEntriesTable =
 document.getElementById("recentEntriesTable");
 
+recentEntriesTable.innerHTML = `
+<tr>
+    <td colspan="6">
+        Đang tải dữ liệu...
+    </td>
+</tr>
+`;
+
 const btnCancel =
 document.getElementById("btnCancel");
 
@@ -79,6 +87,8 @@ window.addEventListener(
 async () => {
 
     generateNewId();
+
+    loadCachedHistory();
 
     await loadProducts();
 
@@ -340,6 +350,37 @@ quantityEa.addEventListener(
 calculateCS
 );
 
+function loadCachedHistory(){
+
+    try{
+
+        const cached =
+        localStorage.getItem(
+            "LATEST_DATA"
+        );
+
+        if(!cached)
+            return false;
+
+        historyData =
+        JSON.parse(cached);
+
+        renderHistory();
+
+        return true;
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        return false;
+
+    }
+
+}
+
+
 
 async function loadLatest(){
 
@@ -377,6 +418,12 @@ async function loadLatest(){
             formatDate(item.exp)
 
             }));
+
+            localStorage.setItem(
+            "LATEST_DATA",
+            JSON.stringify(historyData)
+            );
+
 
             renderHistory();
 
