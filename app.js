@@ -7,7 +7,9 @@ let selectedProduct = null;
 let editingId = null;
 
 let html5QrCode = null;
+let hasLoadedOnce = false;
 
+let deleteTargetId = null;
 
 let scannerTarget = null;
 let scannerControls = null;
@@ -336,9 +338,12 @@ quantityEa.addEventListener(
     "input",
     calculateCS
 );
-
+let isDeleting = false;
 
 async function loadLatest() {
+
+    // 🔥 BƯỚC 5 - CHẶN RELOAD KHI ĐANG DELETE
+    if (isDeleting) return;
 
     try {
 
@@ -370,23 +375,18 @@ async function loadLatest() {
             historyData =
                 (result.data || []).map(item => ({
                     ...item,
-
-                    exp:
-                        formatDate(item.exp)
-
+                    exp: formatDate(item.exp)
                 }));
 
-            renderHistory();
+            hasLoadedOnce = true;
 
+            renderHistory();
         }
 
     }
     catch (err) {
-
         console.error(err);
-
     }
-
 }
 console.log(historyData);
 function startRealtimePolling() {
@@ -789,22 +789,21 @@ function optimisticUpdate(data) {
 
 function renderHistory() {
 
-    if (
-        historyData.length === 0
-    ) {
+    if (historyData.length === 0) {
 
-        recentEntriesTable.innerHTML =
-            `
+    // ❌ CHỈ HIỂN THỊ khi đã load xong lần đầu
+    if (!hasLoadedOnce) {
+        recentEntriesTable.innerHTML = `
         <tr>
             <td colspan="6">
                 Chưa có dữ liệu
             </td>
         </tr>
         `;
-
-        return;
-
     }
+
+    return;
+}
 
     recentEntriesTable.innerHTML =
         historyData.map(item => `
@@ -1028,3 +1027,94 @@ function formatDate(value) {
     return `${day}.${month}.${year}`;
 
 }
+function bindHistoryClick() {
+
+    document.querySelectorAll(".history-row").forEach(row => {
+
+        const id = row.dataset.id;
+
+        // click edit (giữ nguyên)
+        row.onclick = () => {
+
+            const item = historyData.find(x => String(x.id) === String(id));
+            if (item) editItem(item);
+        };
+
+        // ======================
+        // LONG PRESS (desktop + mobile)
+        // ======================
+        let timer = null;
+
+        const start = () => {
+            timer = setTimeout(() => {
+                openDeletePopup(id);
+            }, 600);
+        };
+
+        const cancel = () => clearTimeout(timer);
+
+        // desktop
+        row.addEventListener("mousedown", start);
+        row.addEventListener("mouseup", cancel);
+        row.addEventListener("mouseleave", cancel);
+
+        // mobile
+        row.addEventListener("touchstart", start, { passive: true });
+        row.addEventListener("touchend", cancel);
+
+    });
+}
+function openDeletePopup(id) {
+
+    deleteTargetId = id;
+
+    const item = historyData.find(x => String(x.id) === String(id));
+
+    document.getElementById("popupInfo").textContent =
+        item ? `${item.article} - ${item.description}` : "";
+
+    document.getElementById("deletePopup").classList.remove("hidden");
+}
+function closeDeletePopup() {
+    deleteTargetId = null;
+    document.getElementById("deletePopup").classList.add("hidden");
+}
+async function deleteItem(id) {
+
+    isDeleting = true;
+
+    const index = historyData.findIndex(x => String(x.id) === String(id));
+
+    if (index === -1) return;
+
+    historyData.splice(index, 1);
+    renderHistory();
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "delete",
+                id
+            })
+        });
+
+    } catch (err) {
+        console.error(err);
+        loadLatest();
+    }
+
+    isDeleting = false;
+}
+document.getElementById("btnCancelDelete")
+    .addEventListener("click", closeDeletePopup);
+
+document.getElementById("btnConfirmDelete")
+    .addEventListener("click", () => {
+
+        if (deleteTargetId) {
+            deleteItem(deleteTargetId);
+        }
+
+        closeDeletePopup();
+    });
