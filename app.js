@@ -349,7 +349,17 @@ quantityEa.addEventListener(
 "input",
 calculateCS
 );
+const video =
+document.querySelector(
+    "#reader video"
+);
 
+if(video){
+
+    video.style.objectFit =
+    "cover";
+
+}
 function loadCachedHistory(){
 
     try{
@@ -494,37 +504,85 @@ async function startScanner(){
         '<div id="reader" style="width:100%;height:100%"></div>';
 
         html5QrCode =
-        new Html5Qrcode("reader");
+new Html5Qrcode(
+    "reader",
+    {
+        formatsToSupport:[
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8
+        ]
+    }
+);
 
-        await html5QrCode.start(
+        const devices =
+await Html5Qrcode.getCameras();
 
-            {
-                facingMode: "environment"
-            },
+if(!devices || devices.length === 0){
 
-            {
-                fps: 10,
-                qrbox: 250,
-                aspectRatio: 1
-            },
+    throw "No camera found";
 
-            (decodedText) => {
+}
 
-                console.log(
-                    "SCAN:",
-                    decodedText
-                );
+let cameraId =
+devices[0].id;
 
-                handleScan(
-                    decodedText
-                );
+/* ưu tiên camera sau */
 
-                closeScanner();
-            }
+const backCamera =
+devices.find(device =>
 
-        );
+    /back|rear|environment/i.test(
+        device.label
+    )
+
+);
+
+if(backCamera){
+
+    cameraId =
+    backCamera.id;
+
+}
+
+await html5QrCode.start(
+
+    cameraId,
+
+    {
+        {
+    fps: 15,
+
+    qrbox: {
+        width:300,
+        height:150
+    },
+
+    videoConstraints: {
+
+        facingMode: "environment",
+
+        width: {
+            ideal: 1920
+        },
+
+        height: {
+            ideal: 1080
+        }
 
     }
+    },
+
+    (decodedText) => {
+
+        handleScan(decodedText);
+
+        closeScanner();
+
+    }
+
+);
+}
     catch(err){
 
         console.error(
