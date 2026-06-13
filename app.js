@@ -1,571 +1,103 @@
-/* ==========================
-   SCANNER
-========================== */
+const API_URL =
+"https://script.google.com/macros/s/AKfycbw1OGmEdgI1xLTnwKd0Qfhu9-NEdyFBF9U_JOc7MD2XZ_N1O7ZCwJ8ev4kMO7qMnr7U/exec";
 
-function openScanner(target){
+let products = [];
+let historyData = [];
+let selectedProduct = null;
+let editingId = null;
 
-    scannerTarget = target;
+let scannerTarget = null;
+let scannerControls = null;
+let scannerRunning = false;
 
-    scannerOverlay.classList.remove(
-        "hidden"
-    );
+let currentVersion = 0;
 
-    startScanner();
+let isSaving = false;
 
-}
+let DEVICE_ID =
+localStorage.getItem("DEVICE_ID");
 
-async function closeScanner(){
+if(!DEVICE_ID){
 
-    scannerOverlay.classList.add(
-        "hidden"
-    );
+    DEVICE_ID =
+    crypto.randomUUID();
 
-    await stopScanner();
-
-}
-
-function handleScan(code){
-
-    if(!scannerTarget)
-        return;
-
-    scannerTarget.value =
-    code;
-
-    scannerTarget.dispatchEvent(
-        new Event("input")
+    localStorage.setItem(
+        "DEVICE_ID",
+        DEVICE_ID
     );
 
 }
 
-async function startScanner(){
+const entryForm =
+document.getElementById("entryForm");
 
-    if(scannerRunning)
-        return;
+const entryId =
+document.getElementById("entryId");
 
-    try{
+const locationInput =
+document.getElementById("location");
 
-        scannerRunning = true;
+const barcodeInput =
+document.getElementById("barcode");
 
-        scannerViewport.innerHTML =
-        `
-        <div
-            id="reader"
-            style="
-                width:100%;
-                height:100%;
-            ">
-        </div>
-        `;
+const quantityEa =
+document.getElementById("quantityEa");
 
-        html5QrCode =
-        new Html5Qrcode(
-            "reader"
-        );
+const expiryDate =
+document.getElementById("expiryDate");
 
-        await html5QrCode.start(
+const txtProductCode =
+document.getElementById("txtProductCode");
 
-            {
-                facingMode:
-                "environment"
-            },
+const txtProductDesc =
+document.getElementById("txtProductDesc");
 
-            {
+const txtSpecification =
+document.getElementById("txtSpecification");
 
-                fps:15,
+const txtQuantityCs =
+document.getElementById("txtQuantityCs");
 
-                qrbox:{
-                    width:300,
-                    height:150
-                },
+const datePreview =
+document.getElementById("datePreview");
 
-                aspectRatio:1.777
+const recentEntriesTable =
+document.getElementById("recentEntriesTable");
 
-            },
+const btnCancel =
+document.getElementById("btnCancel");
 
-            (decodedText)=>{
+const scannerOverlay =
+document.getElementById("scannerOverlay");
 
-                console.log(
-                    "SCAN:",
-                    decodedText
-                );
+const scannerViewport =
+document.getElementById("scannerViewport");
 
-                handleScan(
-                    decodedText
-                );
+const btnCloseScanner =
+document.getElementById("btnCloseScanner");
 
-                closeScanner();
+window.addEventListener(
+"DOMContentLoaded",
+async () => {
 
-            }
+    generateNewId();
 
-        );
+    await loadProducts();
 
-        setTimeout(()=>{
+    await loadLatest();
 
-            const video =
-            document.querySelector(
-                "#reader video"
-            );
-
-            if(video){
-
-                video.style.objectFit =
-                "cover";
-
-            }
-
-        },300);
-
-    }
-    catch(err){
-
-        console.error(
-            "Scanner Error:",
-            err
-        );
-
-        scannerRunning =
-        false;
-
-        alert(
-            "Không mở được camera"
-        );
-
-    }
-
-}
-
-document
-.querySelectorAll(
-    ".btn-scan"
-)
-.forEach(btn=>{
-
-    btn.addEventListener(
-        "click",
-        ()=>{
-
-            const target =
-            document.getElementById(
-                btn.dataset.target
-            );
-
-            openScanner(
-                target
-            );
-
-        }
-    );
+    startRealtimePolling();
 
 });
 
-async function stopScanner(){
-
-    try{
-
-        if(html5QrCode){
-
-            await html5QrCode.stop();
-
-            await html5QrCode.clear();
-
-            html5QrCode =
-            null;
-
-        }
-
-    }
-    catch(err){
-
-        console.error(
-            err
-        );
-
-    }
-
-    scannerViewport.innerHTML =
-    "";
-
-    scannerRunning =
-    false;
-
-    scannerTarget =
-    null;
-
-}
-
-btnCloseScanner.addEventListener(
-
-    "click",
-
-    function(e){
-
-        e.preventDefault();
-
-        e.stopPropagation();
-
-        closeScanner();
-
-    }
-
-);
-/* ==========================
-   INIT
-========================== */
-
-window.addEventListener(
-
-    "DOMContentLoaded",
-
-    async()=>{
-
-        generateNewId();
-
-        loadCachedHistory();
-
-        await loadProducts();
-
-        await loadLatest();
-
-        startRealtimePolling();
-
-    }
-
-);
-
-/* ==========================
-   PRODUCT DATA
-========================== */
-
-async function loadProducts(){
-
-    try{
-
-        const res =
-        await fetch(
-
-            "data.json",
-
-            {
-                cache:"force-cache"
-            }
-
-        );
-
-        products =
-        await res.json();
-
-    }
-    catch(err){
-
-        console.error(
-            err
-        );
-
-    }
-
-}
-
-/* ==========================
-   HISTORY CACHE
-========================== */
-
-function loadCachedHistory(){
-
-    try{
-
-        const cached =
-        localStorage.getItem(
-            "LATEST_DATA"
-        );
-
-        if(!cached)
-            return false;
-
-        historyData =
-        JSON.parse(
-            cached
-        );
-
-        renderHistory();
-
-        return true;
-
-    }
-    catch(err){
-
-        console.error(
-            err
-        );
-
-        return false;
-
-    }
-
-}
-
-/* ==========================
-   LOAD LATEST
-========================== */
-
-async function loadLatest(){
-
-    try{
-
-        const res =
-        await fetch(
-
-            API_URL +
-            "?action=latest&t=" +
-            Date.now()
-
-        );
-
-        const result =
-        await res.json();
-
-        if(
-
-            !result ||
-
-            !result.version
-
-        ){
-
-            return;
-
-        }
-
-        if(
-
-            result.version !==
-            currentVersion
-
-        ){
-
-            currentVersion =
-            result.version;
-
-            historyData =
-
-            (result.data || [])
-
-            .map(item=>({
-
-                ...item,
-
-                exp:
-                formatDate(
-                    item.exp
-                )
-
-            }));
-
-            localStorage.setItem(
-
-                "LATEST_DATA",
-
-                JSON.stringify(
-                    historyData
-                )
-
-            );
-
-            renderHistory();
-
-        }
-
-    }
-    catch(err){
-
-        console.error(
-            err
-        );
-
-    }
-
-}
-
-/* ==========================
-   REALTIME POLLING
-========================== */
-
-function startRealtimePolling(){
-
-    setInterval(
-
-        loadLatest,
-
-        3000
-
-    );
-
-}
-
-/* ==========================
-   SAVE
-========================== */
-
-entryForm.addEventListener(
-
-    "submit",
-
-    async(e)=>{
-
-        e.preventDefault();
-
-        const data =
-        collectData();
-
-        if(!data)
-            return;
-
-        optimisticUpdate(
-            data
-        );
-
-        clearForm();
-
-        saveToSheet(
-            data
-        )
-
-        .catch(err=>{
-
-            console.error(
-
-                "Save Error:",
-
-                err
-
-            );
-
-        });
-
-    }
-
-);
-
-async function saveToSheet(data){
-
-    try{
-
-        const res =
-        await fetch(
-
-            API_URL,
-
-            {
-
-                method:"POST",
-
-                body:
-                JSON.stringify({
-
-                    action:"save",
-
-                    ...data
-
-                })
-
-            }
-
-        );
-
-        const result =
-        await res.json();
-
-        console.log(
-
-            "SAVE RESULT",
-
-            result
-
-        );
-
-        return result;
-
-    }
-    catch(err){
-
-        console.error(
-
-            "SAVE ERROR",
-
-            err
-
-        );
-
-        throw err;
-
-    }
-
-}
-
-/* ==========================
-   OPTIMISTIC UPDATE
-========================== */
-
-function optimisticUpdate(data){
-
-    const index =
-
-    historyData.findIndex(
-
-        x=>
-        x.id === data.id
-
-    );
-
-    if(index >= 0){
-
-        historyData[index] =
-        data;
-
-    }
-    else{
-
-        historyData.unshift(
-            data
-        );
-
-        if(
-
-            historyData.length >
-            20
-
-        ){
-
-            historyData.pop();
-
-        }
-
-    }
-
-    localStorage.setItem(
-
-        "LATEST_DATA",
-
-        JSON.stringify(
-            historyData
-        )
-
-    );
-
-    renderHistory();
-
-}
-/* ==========================
-   ID
-========================== */
-
-function generateId(){
+function generateId() {
 
     return crypto.randomUUID();
 
 }
 
-function generateNewId(){
+function generateNewId() {
 
     editingId = null;
 
@@ -574,11 +106,31 @@ function generateNewId(){
 
 }
 
-/* ==========================
-   LOCATION VALIDATE
-========================== */
+async function loadProducts() {
 
-function validateLocation(value){
+    try {
+
+        const res =
+        await fetch(
+            "data.json",
+            {
+                cache: "force-cache"
+            }
+        );
+
+        products =
+        await res.json();
+
+    }
+    catch(err){
+
+        console.error(err);
+
+    }
+
+}
+
+function validateLocation(value) {
 
     const regex =
     /^([A-Z]{2})-(\d{3})-(\d{2})$/;
@@ -590,57 +142,34 @@ function validateLocation(value){
         return false;
 
     const rack =
-    parseInt(
-        match[2],
-        10
-    );
+    parseInt(match[2], 10);
 
     const level =
-    parseInt(
-        match[3],
-        10
-    );
+    parseInt(match[3], 10);
 
-    return (
-
-        rack >= 1 &&
-        rack <= 32 &&
-
-        level >= 1 &&
-        level <= 6
-
-    );
+    return rack >= 1 &&
+           rack <= 32 &&
+           level >= 1 &&
+           level <= 6;
 
 }
 
 locationInput.addEventListener(
+"input",
+() => {
 
-    "input",
+    locationInput.value =
+    locationInput.value.toUpperCase();
 
-    ()=>{
+});
 
-        locationInput.value =
-        locationInput.value
-        .toUpperCase();
+function validateDate(raw) {
 
-    }
+    if(raw === "31129999") {
 
-);
+        return {
 
-/* ==========================
-   DATE VALIDATE
-========================== */
-
-function validateDate(raw){
-
-    if(
-        raw ===
-        "31129999"
-    ){
-
-        return{
-
-            valid:true,
+            valid: true,
 
             formatted:
             "31.12.9999"
@@ -649,11 +178,9 @@ function validateDate(raw){
 
     }
 
-    if(
-        raw.length !== 8
-    ){
+    if(raw.length !== 8) {
 
-        return{
+        return {
 
             valid:false
 
@@ -662,44 +189,29 @@ function validateDate(raw){
     }
 
     const day =
-    Number(
-        raw.substring(0,2)
-    );
+    Number(raw.substring(0,2));
 
     const month =
-    Number(
-        raw.substring(2,4)
-    );
+    Number(raw.substring(2,4));
 
     const year =
-    Number(
-        raw.substring(4,8)
-    );
+    Number(raw.substring(4,8));
 
     const d =
     new Date(
-
         year,
-
         month - 1,
-
         day
-
     );
 
     const valid =
-
         d.getDate() === day &&
-
-        d.getMonth() ===
-        month - 1 &&
-
-        d.getFullYear() ===
-        year;
+        d.getMonth() === month - 1 &&
+        d.getFullYear() === year;
 
     if(!valid){
 
-        return{
+        return {
 
             valid:false
 
@@ -707,12 +219,11 @@ function validateDate(raw){
 
     }
 
-    return{
+    return {
 
         valid:true,
 
         formatted:
-
         `${raw.substring(0,2)}.${raw.substring(2,4)}.${raw.substring(4,8)}`
 
     };
@@ -720,55 +231,45 @@ function validateDate(raw){
 }
 
 expiryDate.addEventListener(
+"input",
+() => {
 
-    "input",
+    const result =
+    validateDate(
+        expiryDate.value
+    );
 
-    ()=>{
+    if(result.valid){
 
-        const result =
-        validateDate(
-            expiryDate.value
+        expiryDate.classList.remove(
+            "input-error"
         );
 
-        if(result.valid){
+        datePreview.textContent =
+        result.formatted;
 
-            expiryDate.classList.remove(
-                "input-error"
-            );
+    }
+    else{
 
-            datePreview.textContent =
-            result.formatted;
+        expiryDate.classList.add(
+            "input-error"
+        );
 
-        }
-        else{
-
-            expiryDate.classList.add(
-                "input-error"
-            );
-
-            datePreview.textContent =
-            "--.--.----";
-
-        }
+        datePreview.textContent =
+        "--.--.----";
 
     }
 
-);
-
-/* ==========================
-   PRODUCT SEARCH
-========================== */
+});
 
 function searchBarcode(code){
 
     selectedProduct =
-
-    products.find(item=>
+    products.find(item =>
 
         item.BARCODE.some(
 
-            b=>
-
+            b =>
             String(b) ===
             String(code)
 
@@ -798,7 +299,6 @@ function searchBarcode(code){
     selectedProduct.TSOBDESC;
 
     txtSpecification.textContent =
-
     `${selectedProduct["MU/CS"]} EA/CS`;
 
     calculateCS();
@@ -806,25 +306,14 @@ function searchBarcode(code){
 }
 
 barcodeInput.addEventListener(
+"input",
+() => {
 
-    "input",
+    searchBarcode(
+        barcodeInput.value.trim()
+    );
 
-    ()=>{
-
-        searchBarcode(
-
-            barcodeInput.value
-            .trim()
-
-        );
-
-    }
-
-);
-
-/* ==========================
-   CALCULATE CS
-========================== */
+});
 
 function calculateCS(){
 
@@ -833,35 +322,205 @@ function calculateCS(){
 
     const qty =
     Number(
-
         quantityEa.value || 0
-
     );
 
     const mucs =
     Number(
-
         selectedProduct["MU/CS"]
-
     );
 
     const cs =
     qty / mucs;
 
     txtQuantityCs.textContent =
-
     `${cs.toFixed(2)} CS`;
 
 }
 
 quantityEa.addEventListener(
-
-    "input",
-
-    calculateCS
-
+"input",
+calculateCS
 );
 
+
+async function loadLatest(){
+
+    try{
+
+        const res =
+        await fetch(
+            API_URL +
+            "?action=latest&t=" +
+            Date.now()
+        );
+
+        const result =
+        await res.json();
+
+        if(
+            !result ||
+            !result.version
+        ){
+            return;
+        }
+
+        if(
+            result.version !==
+            currentVersion
+        ){
+
+            currentVersion =
+            result.version;
+
+            historyData =
+            (result.data || []).map(item => ({...item,
+
+            exp:
+            formatDate(item.exp)
+
+            }));
+
+            renderHistory();
+
+        }
+
+    }
+    catch(err){
+
+        console.error(err);
+
+    }
+
+}
+console.log(historyData);
+function startRealtimePolling(){
+
+    setInterval(
+        loadLatest,
+        3000
+    );
+
+}
+
+/* ==========================
+   SCANNER
+========================== */
+
+function openScanner(target) {
+
+    scannerTarget = target;
+
+    scannerOverlay.classList.remove("hidden");
+
+    startScanner();
+}
+
+function closeScanner() {
+
+    scannerOverlay.classList.add("hidden");
+    stopScanner();
+}
+
+function handleScan(code) {
+    if (!scannerTarget) return;
+
+    scannerTarget.value = code;
+
+    searchBarcode(code);
+
+    stopScanner();
+}
+
+async function startScanner() {
+    if (scannerRunning) return;
+
+    try {
+        scannerRunning = true;
+
+        scannerViewport.innerHTML = "";
+
+        const videoElement = document.createElement("video");
+        videoElement.style.width = "100%";
+        videoElement.style.height = "100%";
+        videoElement.setAttribute("playsinline", true);
+        videoElement.autoplay = true;
+
+        scannerViewport.appendChild(videoElement);
+
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+
+        const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+
+        const selectedDeviceId =
+            devices.length > 0 ? devices[0].deviceId : null;
+
+        scannerControls =
+        await codeReader.decodeFromConstraints(
+        {
+            video: {
+                facingMode: "environment"
+            }
+        },
+        videoElement,
+        (result, err) => {
+        
+            if(result){
+            
+                handleScan(
+                    result.getText()
+                );
+            
+            }
+        
+        }
+        );
+
+    } catch (err) {
+        console.error("Camera error:", err);
+        scannerRunning = false;
+    }
+}
+document
+.querySelectorAll(".btn-scan")
+.forEach(btn=>{
+
+    btn.addEventListener(
+    "click",
+    ()=>{
+
+        const target =
+        document.getElementById(
+            btn.dataset.target
+        );
+
+        openScanner(target);
+
+    });
+
+});
+function stopScanner(codeReader) {
+
+    try {
+        if (scannerControls) scannerControls.stop();
+    } catch (e) {}
+
+    scannerViewport.innerHTML = "";
+
+    scannerRunning = false;
+    scannerTarget = null;
+}
+btnCloseScanner.addEventListener(
+"click",
+function(e){
+
+    e.preventDefault();
+
+    e.stopPropagation();
+
+    closeScanner();
+
+});
 /* ==========================
    COLLECT DATA
 ========================== */
@@ -869,11 +528,9 @@ quantityEa.addEventListener(
 function collectData(){
 
     if(
-
         !validateLocation(
             locationInput.value
         )
-
     ){
 
         alert(
@@ -895,7 +552,6 @@ function collectData(){
     }
 
     const dateResult =
-
     validateDate(
         expiryDate.value
     );
@@ -912,20 +568,16 @@ function collectData(){
 
     const qty =
     parseInt(
-
         quantityEa.value || 0
-
     );
 
     const csQty =
-
     qty /
-
     Number(
         selectedProduct["MU/CS"]
     );
 
-    return{
+    return {
 
         id:
         editingId ||
@@ -949,7 +601,6 @@ function collectData(){
         qty,
 
         csQty:
-
         Number(
             csQty.toFixed(2)
         ),
@@ -958,6 +609,124 @@ function collectData(){
         dateResult.formatted
 
     };
+
+}
+
+/* ==========================
+   SAVE
+========================== */
+
+entryForm.addEventListener(
+"submit",
+async(e)=>{
+
+    e.preventDefault();
+
+    const data =
+    collectData();
+
+    if(!data)
+        return;
+
+    /* cập nhật UI ngay */
+
+    optimisticUpdate(data);
+
+    /* reset form ngay */
+
+    clearForm();
+
+    /* gửi nền */
+
+    saveToSheet(data)
+    .catch(err=>{
+
+        console.error(
+            "Save Error:",
+            err
+        );
+
+    });
+
+});
+
+async function saveToSheet(data){
+
+    try{
+
+        const res = await fetch(API_URL,{
+
+            method:"POST",
+
+            body: JSON.stringify({
+
+                action:"save",
+
+                ...data
+
+            })
+
+        });
+
+        const result =
+        await res.json();
+
+        console.log(
+            "SAVE RESULT",
+            result
+        );
+
+        return result;
+
+    }
+    catch(err){
+
+        console.error(
+            "SAVE ERROR",
+            err
+        );
+
+        throw err;
+
+    }
+
+}
+
+/* ==========================
+   OPTIMISTIC UPDATE
+========================== */
+
+function optimisticUpdate(data){
+
+    const index =
+    historyData.findIndex(
+        x =>
+        x.id === data.id
+    );
+
+    if(index >= 0){
+
+        historyData[index] =
+        data;
+
+    }
+    else{
+
+        historyData.unshift(
+            data
+        );
+
+        if(
+            historyData.length > 20
+        ){
+
+            historyData.pop();
+
+        }
+
+    }
+
+    renderHistory();
 
 }
 
@@ -972,7 +741,6 @@ function renderHistory(){
     ){
 
         recentEntriesTable.innerHTML =
-
         `
         <tr>
             <td colspan="6">
@@ -986,25 +754,36 @@ function renderHistory(){
     }
 
     recentEntriesTable.innerHTML =
-
-    historyData.map(item=>`
+    historyData.map(item => `
 
         <tr
             class="history-row"
             data-id="${item.id}"
         >
 
-            <td>${item.location}</td>
+            <td>
+                ${item.location}
+            </td>
 
-            <td>${item.article}</td>
+            <td>
+                ${item.article}
+            </td>
 
-            <td>${item.description}</td>
+            <td>
+                ${item.description}
+            </td>
 
-            <td>${item.qty}</td>
+            <td>
+                ${item.qty}
+            </td>
 
-            <td>${item.csQty}</td>
+            <td>
+                ${item.csQty}
+            </td>
 
-            <td>${item.exp}</td>
+            <td>
+                ${item.exp}
+            </td>
 
         </tr>
 
@@ -1017,34 +796,23 @@ function renderHistory(){
 function bindHistoryClick(){
 
     document
-
     .querySelectorAll(
         ".history-row"
     )
-
     .forEach(row=>{
 
-        row.onclick = ()=>{
+        row.onclick = () => {
 
-            const item =
+            const id =
+            row.dataset.id;
 
-            historyData.find(
-
-                x=>
-
-                String(x.id) ===
-
-                String(
-                    row.dataset.id
-                )
-
+            const item = historyData.find(
+                x => String(x.id) === String(row.dataset.id)
             );
 
             if(item){
 
-                editItem(
-                    item
-                );
+                editItem(item);
 
             }
 
@@ -1082,7 +850,6 @@ function editItem(item){
     calculateCS();
 
     expiryDate.value =
-
     item.exp.replaceAll(
         ".",
         ""
@@ -1102,18 +869,16 @@ function editItem(item){
 }
 
 /* ==========================
-   CLEAR
+   CLEAR FORM
 ========================== */
 
 function clearForm(){
 
     entryForm.reset();
 
-    editingId =
-    null;
+    editingId = null;
 
-    selectedProduct =
-    null;
+    selectedProduct = null;
 
     txtProductCode.textContent =
     "---";
@@ -1134,12 +899,13 @@ function clearForm(){
 
 }
 
+/* ==========================
+   CANCEL
+========================== */
+
 btnCancel.addEventListener(
-
-    "click",
-
-    clearForm
-
+"click",
+clearForm
 );
 
 /* ==========================
@@ -1147,94 +913,61 @@ btnCancel.addEventListener(
 ========================== */
 
 const btnScrollTop =
-
 document.getElementById(
     "btnScrollTop"
 );
 
 window.addEventListener(
+"scroll",
+()=>{
 
-    "scroll",
+    if(
+        window.scrollY > 300
+    ){
 
-    ()=>{
+        btnScrollTop.classList.remove(
+            "hidden"
+        );
 
-        if(
+    }
+    else{
 
-            window.scrollY > 300
-
-        ){
-
-            btnScrollTop.classList.remove(
-                "hidden"
-            );
-
-        }
-        else{
-
-            btnScrollTop.classList.add(
-                "hidden"
-            );
-
-        }
+        btnScrollTop.classList.add(
+            "hidden"
+        );
 
     }
 
-);
+});
 
 btnScrollTop.addEventListener(
+"click",
+()=>{
 
-    "click",
+    window.scrollTo({
 
-    ()=>{
+        top:0,
 
-        window.scrollTo({
+        behavior:"smooth"
 
-            top:0,
+    });
 
-            behavior:"smooth"
-
-        });
-
-    }
-
-);
-
-/* ==========================
-   FORMAT DATE
-========================== */
-
+});
 function formatDate(value){
 
-    if(!value)
-        return "";
+    if(!value) return "";
 
-    const d =
-    new Date(value);
+    const d = new Date(value);
 
-    if(isNaN(d))
-        return value;
+    if(isNaN(d)) return value;
 
     const day =
-
-    String(
-        d.getDate()
-    )
-
-    .padStart(
-        2,
-        "0"
-    );
+    String(d.getDate())
+    .padStart(2,"0");
 
     const month =
-
-    String(
-        d.getMonth()+1
-    )
-
-    .padStart(
-        2,
-        "0"
-    );
+    String(d.getMonth()+1)
+    .padStart(2,"0");
 
     const year =
     d.getFullYear();
