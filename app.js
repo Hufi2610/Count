@@ -1,10 +1,13 @@
 const API_URL =
-"https://script.google.com/macros/s/AKfycbw1OGmEdgI1xLTnwKd0Qfhu9-NEdyFBF9U_JOc7MD2XZ_N1O7ZCwJ8ev4kMO7qMnr7U/exec";
+    "https://script.google.com/macros/s/AKfycbw1OGmEdgI1xLTnwKd0Qfhu9-NEdyFBF9U_JOc7MD2XZ_N1O7ZCwJ8ev4kMO7qMnr7U/exec";
 
 let products = [];
 let historyData = [];
 let selectedProduct = null;
 let editingId = null;
+
+let html5QrCode = null;
+
 
 let scannerTarget = null;
 let scannerControls = null;
@@ -15,12 +18,12 @@ let currentVersion = 0;
 let isSaving = false;
 
 let DEVICE_ID =
-localStorage.getItem("DEVICE_ID");
+    localStorage.getItem("DEVICE_ID");
 
-if(!DEVICE_ID){
+if (!DEVICE_ID) {
 
     DEVICE_ID =
-    crypto.randomUUID();
+        crypto.randomUUID();
 
     localStorage.setItem(
         "DEVICE_ID",
@@ -30,66 +33,66 @@ if(!DEVICE_ID){
 }
 
 const entryForm =
-document.getElementById("entryForm");
+    document.getElementById("entryForm");
 
 const entryId =
-document.getElementById("entryId");
+    document.getElementById("entryId");
 
 const locationInput =
-document.getElementById("location");
+    document.getElementById("location");
 
 const barcodeInput =
-document.getElementById("barcode");
+    document.getElementById("barcode");
 
 const quantityEa =
-document.getElementById("quantityEa");
+    document.getElementById("quantityEa");
 
 const expiryDate =
-document.getElementById("expiryDate");
+    document.getElementById("expiryDate");
 
 const txtProductCode =
-document.getElementById("txtProductCode");
+    document.getElementById("txtProductCode");
 
 const txtProductDesc =
-document.getElementById("txtProductDesc");
+    document.getElementById("txtProductDesc");
 
 const txtSpecification =
-document.getElementById("txtSpecification");
+    document.getElementById("txtSpecification");
 
 const txtQuantityCs =
-document.getElementById("txtQuantityCs");
+    document.getElementById("txtQuantityCs");
 
 const datePreview =
-document.getElementById("datePreview");
+    document.getElementById("datePreview");
 
 const recentEntriesTable =
-document.getElementById("recentEntriesTable");
+    document.getElementById("recentEntriesTable");
 
 const btnCancel =
-document.getElementById("btnCancel");
+    document.getElementById("btnCancel");
 
 const scannerOverlay =
-document.getElementById("scannerOverlay");
+    document.getElementById("scannerOverlay");
 
 const scannerViewport =
-document.getElementById("scannerViewport");
+    document.getElementById("scannerViewport");
 
 const btnCloseScanner =
-document.getElementById("btnCloseScanner");
+    document.getElementById("btnCloseScanner");
 
 window.addEventListener(
-"DOMContentLoaded",
-async () => {
+    "DOMContentLoaded",
+    async () => {
 
-    generateNewId();
+        generateNewId();
 
-    await loadProducts();
+        await loadProducts();
 
-    await loadLatest();
+        await loadLatest();
 
-    startRealtimePolling();
+        startRealtimePolling();
 
-});
+    });
 
 function generateId() {
 
@@ -102,7 +105,7 @@ function generateNewId() {
     editingId = null;
 
     entryId.value =
-    generateId();
+        generateId();
 
 }
 
@@ -111,18 +114,18 @@ async function loadProducts() {
     try {
 
         const res =
-        await fetch(
-            "data.json",
-            {
-                cache: "force-cache"
-            }
-        );
+            await fetch(
+                "data.json",
+                {
+                    cache: "force-cache"
+                }
+            );
 
         products =
-        await res.json();
+            await res.json();
 
     }
-    catch(err){
+    catch (err) {
 
         console.error(err);
 
@@ -132,88 +135,79 @@ async function loadProducts() {
 
 function validateLocation(value) {
 
-    const regex =
-    /^([A-Z]{2})-(\d{3})-(\d{2})$/;
+    if (!value) return false;
 
-    const match =
-    value.match(regex);
+    // chỉ giữ A-Z + 0-9 + dấu -
+    const cleaned =
+        value.toUpperCase().trim();
 
-    if(!match)
-        return false;
+    const valid =
+        /^[A-Z0-9-]+$/.test(cleaned);
 
-    const rack =
-    parseInt(match[2], 10);
-
-    const level =
-    parseInt(match[3], 10);
-
-    return rack >= 1 &&
-           rack <= 32 &&
-           level >= 1 &&
-           level <= 6;
+    return valid;
 
 }
 
 locationInput.addEventListener(
-"input",
-() => {
+    "input",
+    () => {
 
-    locationInput.value =
-    locationInput.value.toUpperCase();
+        locationInput.value =
+            locationInput.value.toUpperCase();
 
-});
+    });
 
 function validateDate(raw) {
 
-    if(raw === "31129999") {
+    if (raw === "31129999") {
 
         return {
 
             valid: true,
 
             formatted:
-            "31.12.9999"
+                "31.12.9999"
 
         };
 
     }
 
-    if(raw.length !== 8) {
+    if (raw.length !== 8) {
 
         return {
 
-            valid:false
+            valid: false
 
         };
 
     }
 
     const day =
-    Number(raw.substring(0,2));
+        Number(raw.substring(0, 2));
 
     const month =
-    Number(raw.substring(2,4));
+        Number(raw.substring(2, 4));
 
     const year =
-    Number(raw.substring(4,8));
+        Number(raw.substring(4, 8));
 
     const d =
-    new Date(
-        year,
-        month - 1,
-        day
-    );
+        new Date(
+            year,
+            month - 1,
+            day
+        );
 
     const valid =
         d.getDate() === day &&
         d.getMonth() === month - 1 &&
         d.getFullYear() === year;
 
-    if(!valid){
+    if (!valid) {
 
         return {
 
-            valid:false
+            valid: false
 
         };
 
@@ -221,172 +215,173 @@ function validateDate(raw) {
 
     return {
 
-        valid:true,
+        valid: true,
 
         formatted:
-        `${raw.substring(0,2)}.${raw.substring(2,4)}.${raw.substring(4,8)}`
+            `${raw.substring(0, 2)}.${raw.substring(2, 4)}.${raw.substring(4, 8)}`
 
     };
 
 }
 
 expiryDate.addEventListener(
-"input",
-() => {
+    "input",
+    () => {
 
-    const result =
-    validateDate(
-        expiryDate.value
-    );
+        const result =
+            validateDate(
+                expiryDate.value
+            );
 
-    if(result.valid){
+        if (result.valid) {
 
-        expiryDate.classList.remove(
-            "input-error"
-        );
+            expiryDate.classList.remove(
+                "input-error"
+            );
 
-        datePreview.textContent =
-        result.formatted;
+            datePreview.textContent =
+                result.formatted;
 
-    }
-    else{
+        }
+        else {
 
-        expiryDate.classList.add(
-            "input-error"
-        );
+            expiryDate.classList.add(
+                "input-error"
+            );
 
-        datePreview.textContent =
-        "--.--.----";
+            datePreview.textContent =
+                "--.--.----";
 
-    }
+        }
 
-});
+    });
 
-function searchBarcode(code){
+function searchBarcode(code) {
 
     selectedProduct =
-    products.find(item =>
+        products.find(item =>
 
-        item.BARCODE.some(
+            item.BARCODE.some(
 
-            b =>
-            String(b) ===
-            String(code)
+                b =>
+                    String(b) ===
+                    String(code)
 
-        )
+            )
 
-    );
+        );
 
-    if(!selectedProduct){
+    if (!selectedProduct) {
 
         txtProductCode.textContent =
-        "---";
+            "---";
 
         txtProductDesc.textContent =
-        "Không tìm thấy";
+            "Không tìm thấy";
 
         txtSpecification.textContent =
-        "---";
+            "---";
 
         return;
 
     }
 
     txtProductCode.textContent =
-    selectedProduct.ARTCEXR;
+        selectedProduct.ARTCEXR;
 
     txtProductDesc.textContent =
-    selectedProduct.TSOBDESC;
+        selectedProduct.TSOBDESC;
 
     txtSpecification.textContent =
-    `${selectedProduct["MU/CS"]} EA/CS`;
+        `${selectedProduct["MU/CS"]} EA/CS`;
 
     calculateCS();
 
 }
 
 barcodeInput.addEventListener(
-"input",
-() => {
+    "input",
+    () => {
 
-    searchBarcode(
-        barcodeInput.value.trim()
-    );
+        searchBarcode(
+            barcodeInput.value.trim()
+        );
 
-});
+    });
 
-function calculateCS(){
+function calculateCS() {
 
-    if(!selectedProduct)
+    if (!selectedProduct)
         return;
 
     const qty =
-    Number(
-        quantityEa.value || 0
-    );
+        Number(
+            quantityEa.value || 0
+        );
 
     const mucs =
-    Number(
-        selectedProduct["MU/CS"]
-    );
+        Number(
+            selectedProduct["MU/CS"]
+        );
 
     const cs =
-    qty / mucs;
+        qty / mucs;
 
     txtQuantityCs.textContent =
-    `${cs.toFixed(2)} CS`;
+        `${cs.toFixed(2)} CS`;
 
 }
 
 quantityEa.addEventListener(
-"input",
-calculateCS
+    "input",
+    calculateCS
 );
 
 
-async function loadLatest(){
+async function loadLatest() {
 
-    try{
+    try {
 
         const res =
-        await fetch(
-            API_URL +
-            "?action=latest&t=" +
-            Date.now()
-        );
+            await fetch(
+                API_URL +
+                "?action=latest&t=" +
+                Date.now()
+            );
 
         const result =
-        await res.json();
+            await res.json();
 
-        if(
+        if (
             !result ||
             !result.version
-        ){
+        ) {
             return;
         }
 
-        if(
+        if (
             result.version !==
             currentVersion
-        ){
+        ) {
 
             currentVersion =
-            result.version;
+                result.version;
 
             historyData =
-            (result.data || []).map(item => ({...item,
+                (result.data || []).map(item => ({
+                    ...item,
 
-            exp:
-            formatDate(item.exp)
+                    exp:
+                        formatDate(item.exp)
 
-            }));
+                }));
 
             renderHistory();
 
         }
 
     }
-    catch(err){
+    catch (err) {
 
         console.error(err);
 
@@ -394,7 +389,7 @@ async function loadLatest(){
 
 }
 console.log(historyData);
-function startRealtimePolling(){
+function startRealtimePolling() {
 
     setInterval(
         loadLatest,
@@ -433,105 +428,163 @@ function handleScan(code) {
 }
 
 async function startScanner() {
+
     if (scannerRunning) return;
+    scannerRunning = true;
+
+    scannerViewport.innerHTML = "";
+    scannerOverlay.classList.remove("hidden");
 
     try {
-        scannerRunning = true;
 
-        scannerViewport.innerHTML = "";
+        html5QrCode = new Html5Qrcode("scannerViewport");
 
-        const videoElement = document.createElement("video");
-        videoElement.style.width = "100%";
-        videoElement.style.height = "100%";
-        videoElement.setAttribute("playsinline", true);
-        videoElement.autoplay = true;
+        const devices = await Html5Qrcode.getCameras();
 
-        scannerViewport.appendChild(videoElement);
-
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-
-        const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-
-        const selectedDeviceId =
-            devices.length > 0 ? devices[0].deviceId : null;
-
-        scannerControls =
-        await codeReader.decodeFromConstraints(
-        {
-            video: {
-                facingMode: "environment"
-            }
-        },
-        videoElement,
-        (result, err) => {
-        
-            if(result){
-            
-                handleScan(
-                    result.getText()
-                );
-            
-            }
-        
+        if (!devices.length) {
+            throw new Error("Không tìm thấy camera");
         }
+
+        /* ================= CHỌN CAMERA TỐT NHẤT ================= */
+
+        let cameraId = devices[0].id;
+
+        for (const cam of devices) {
+
+            const label = (cam.label || "").toLowerCase();
+
+            // 📌 Ưu tiên camera sau
+            if (
+                label.includes("back") ||
+                label.includes("rear") ||
+                label.includes("environment")
+            ) {
+                cameraId = cam.id;
+                break;
+            }
+        }
+
+        /* ================= START SCAN ================= */
+        await new Promise(r => setTimeout(r, 50));
+        await html5QrCode.start(
+
+            cameraId,
+
+            {
+                fps: 18,
+
+                disableFlip: false,
+
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                },
+
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ],
+
+                /* 📦 KHUNG SCAN TO (giống AppSheet) */
+                qrbox: (vw, vh) => {
+                    return {
+                        width: vw * 0.92,
+                        height: 260
+                    };
+                },
+
+                videoConstraints: {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            },
+
+            onScanSuccess,
+            () => { }
         );
 
     } catch (err) {
-        console.error("Camera error:", err);
-        scannerRunning = false;
+
+        console.error(err);
+        alert("Không mở được camera\n\n" + err.message);
+        stopScanner();
     }
 }
+function onScanSuccess(decodedText) {
+
+    navigator.vibrate?.(100);
+
+    if (scannerTarget) {
+        scannerTarget.value = decodedText;
+    }
+
+    searchBarcode(decodedText);
+
+    stopScanner();
+
+    if (scannerTarget) scannerTarget.focus();
+}
 document
-.querySelectorAll(".btn-scan")
-.forEach(btn=>{
+    .querySelectorAll(".btn-scan")
+    .forEach(btn => {
 
-    btn.addEventListener(
-    "click",
-    ()=>{
+        btn.addEventListener(
+            "click",
+            () => {
 
-        const target =
-        document.getElementById(
-            btn.dataset.target
-        );
+                const target =
+                    document.getElementById(
+                        btn.dataset.target
+                    );
 
-        openScanner(target);
+                openScanner(target);
+
+            });
 
     });
-
-});
-function stopScanner(codeReader) {
+async function stopScanner() {
 
     try {
-        if (scannerControls) scannerControls.stop();
-    } catch (e) {}
+        if (html5QrCode) {
+            await html5QrCode.stop();
+            await html5QrCode.clear();
+            html5QrCode = null;
+        }
+    } catch (e) {
+        console.log(e);
+    }
 
-    scannerViewport.innerHTML = "";
+    scannerOverlay.classList.add("hidden");
 
     scannerRunning = false;
     scannerTarget = null;
 }
 btnCloseScanner.addEventListener(
-"click",
-function(e){
+    "click",
+    function (e) {
 
-    e.preventDefault();
+        e.preventDefault();
 
-    e.stopPropagation();
+        e.stopPropagation();
 
-    closeScanner();
+        closeScanner();
 
-});
+    });
 /* ==========================
    COLLECT DATA
 ========================== */
 
-function collectData(){
+function collectData() {
 
-    if(
+    if (
         !validateLocation(
             locationInput.value
         )
-    ){
+    ) {
 
         alert(
             "Location không hợp lệ"
@@ -541,7 +594,7 @@ function collectData(){
 
     }
 
-    if(!selectedProduct){
+    if (!selectedProduct) {
 
         alert(
             "Chưa chọn sản phẩm"
@@ -552,11 +605,11 @@ function collectData(){
     }
 
     const dateResult =
-    validateDate(
-        expiryDate.value
-    );
+        validateDate(
+            expiryDate.value
+        );
 
-    if(!dateResult.valid){
+    if (!dateResult.valid) {
 
         alert(
             "Hạn sử dụng sai"
@@ -567,46 +620,46 @@ function collectData(){
     }
 
     const qty =
-    parseInt(
-        quantityEa.value || 0
-    );
+        parseInt(
+            quantityEa.value || 0
+        );
 
     const csQty =
-    qty /
-    Number(
-        selectedProduct["MU/CS"]
-    );
+        qty /
+        Number(
+            selectedProduct["MU/CS"]
+        );
 
     return {
 
         id:
-        editingId ||
-        entryId.value,
+            editingId ||
+            entryId.value,
 
         deviceId:
-        DEVICE_ID,
+            DEVICE_ID,
 
         location:
-        locationInput.value,
+            locationInput.value,
 
         barcode:
-        barcodeInput.value.trim(),
+            barcodeInput.value.trim(),
 
         article:
-        selectedProduct.ARTCEXR,
+            selectedProduct.ARTCEXR,
 
         description:
-        selectedProduct.TSOBDESC,
+            selectedProduct.TSOBDESC,
 
         qty,
 
         csQty:
-        Number(
-            csQty.toFixed(2)
-        ),
+            Number(
+                csQty.toFixed(2)
+            ),
 
         exp:
-        dateResult.formatted
+            dateResult.formatted
 
     };
 
@@ -617,50 +670,50 @@ function collectData(){
 ========================== */
 
 entryForm.addEventListener(
-"submit",
-async(e)=>{
+    "submit",
+    async (e) => {
 
-    e.preventDefault();
+        e.preventDefault();
 
-    const data =
-    collectData();
+        const data =
+            collectData();
 
-    if(!data)
-        return;
+        if (!data)
+            return;
 
-    /* cập nhật UI ngay */
+        /* cập nhật UI ngay */
 
-    optimisticUpdate(data);
+        optimisticUpdate(data);
 
-    /* reset form ngay */
+        /* reset form ngay */
 
-    clearForm();
+        clearForm();
 
-    /* gửi nền */
+        /* gửi nền */
 
-    saveToSheet(data)
-    .catch(err=>{
+        saveToSheet(data)
+            .catch(err => {
 
-        console.error(
-            "Save Error:",
-            err
-        );
+                console.error(
+                    "Save Error:",
+                    err
+                );
+
+            });
 
     });
 
-});
+async function saveToSheet(data) {
 
-async function saveToSheet(data){
+    try {
 
-    try{
+        const res = await fetch(API_URL, {
 
-        const res = await fetch(API_URL,{
-
-            method:"POST",
+            method: "POST",
 
             body: JSON.stringify({
 
-                action:"save",
+                action: "save",
 
                 ...data
 
@@ -669,7 +722,7 @@ async function saveToSheet(data){
         });
 
         const result =
-        await res.json();
+            await res.json();
 
         console.log(
             "SAVE RESULT",
@@ -679,7 +732,7 @@ async function saveToSheet(data){
         return result;
 
     }
-    catch(err){
+    catch (err) {
 
         console.error(
             "SAVE ERROR",
@@ -696,29 +749,29 @@ async function saveToSheet(data){
    OPTIMISTIC UPDATE
 ========================== */
 
-function optimisticUpdate(data){
+function optimisticUpdate(data) {
 
     const index =
-    historyData.findIndex(
-        x =>
-        x.id === data.id
-    );
+        historyData.findIndex(
+            x =>
+                x.id === data.id
+        );
 
-    if(index >= 0){
+    if (index >= 0) {
 
         historyData[index] =
-        data;
+            data;
 
     }
-    else{
+    else {
 
         historyData.unshift(
             data
         );
 
-        if(
+        if (
             historyData.length > 20
-        ){
+        ) {
 
             historyData.pop();
 
@@ -734,14 +787,14 @@ function optimisticUpdate(data){
    HISTORY
 ========================== */
 
-function renderHistory(){
+function renderHistory() {
 
-    if(
+    if (
         historyData.length === 0
-    ){
+    ) {
 
         recentEntriesTable.innerHTML =
-        `
+            `
         <tr>
             <td colspan="6">
                 Chưa có dữ liệu
@@ -754,7 +807,7 @@ function renderHistory(){
     }
 
     recentEntriesTable.innerHTML =
-    historyData.map(item => `
+        historyData.map(item => `
 
         <tr
             class="history-row"
@@ -793,32 +846,32 @@ function renderHistory(){
 
 }
 
-function bindHistoryClick(){
+function bindHistoryClick() {
 
     document
-    .querySelectorAll(
-        ".history-row"
-    )
-    .forEach(row=>{
+        .querySelectorAll(
+            ".history-row"
+        )
+        .forEach(row => {
 
-        row.onclick = () => {
+            row.onclick = () => {
 
-            const id =
-            row.dataset.id;
+                const id =
+                    row.dataset.id;
 
-            const item = historyData.find(
-                x => String(x.id) === String(row.dataset.id)
-            );
+                const item = historyData.find(
+                    x => String(x.id) === String(row.dataset.id)
+                );
 
-            if(item){
+                if (item) {
 
-                editItem(item);
+                    editItem(item);
 
-            }
+                }
 
-        };
+            };
 
-    });
+        });
 
 }
 
@@ -826,43 +879,43 @@ function bindHistoryClick(){
    EDIT
 ========================== */
 
-function editItem(item){
+function editItem(item) {
 
     editingId =
-    item.id;
+        item.id;
 
     entryId.value =
-    item.id;
+        item.id;
 
     locationInput.value =
-    item.location;
+        item.location;
 
     barcodeInput.value =
-    item.article;
+        item.article;
 
     searchBarcode(
         item.article
     );
 
     quantityEa.value =
-    item.qty;
+        item.qty;
 
     calculateCS();
 
     expiryDate.value =
-    item.exp.replaceAll(
-        ".",
-        ""
-    );
+        item.exp.replaceAll(
+            ".",
+            ""
+        );
 
     datePreview.textContent =
-    item.exp;
+        item.exp;
 
     window.scrollTo({
 
-        top:0,
+        top: 0,
 
-        behavior:"smooth"
+        behavior: "smooth"
 
     });
 
@@ -872,7 +925,7 @@ function editItem(item){
    CLEAR FORM
 ========================== */
 
-function clearForm(){
+function clearForm() {
 
     entryForm.reset();
 
@@ -881,19 +934,19 @@ function clearForm(){
     selectedProduct = null;
 
     txtProductCode.textContent =
-    "---";
+        "---";
 
     txtProductDesc.textContent =
-    "---";
+        "---";
 
     txtSpecification.textContent =
-    "---";
+        "---";
 
     txtQuantityCs.textContent =
-    "0 CS";
+        "0 CS";
 
     datePreview.textContent =
-    "--.--.----";
+        "--.--.----";
 
     generateNewId();
 
@@ -904,8 +957,8 @@ function clearForm(){
 ========================== */
 
 btnCancel.addEventListener(
-"click",
-clearForm
+    "click",
+    clearForm
 );
 
 /* ==========================
@@ -913,64 +966,64 @@ clearForm
 ========================== */
 
 const btnScrollTop =
-document.getElementById(
-    "btnScrollTop"
-);
+    document.getElementById(
+        "btnScrollTop"
+    );
 
 window.addEventListener(
-"scroll",
-()=>{
+    "scroll",
+    () => {
 
-    if(
-        window.scrollY > 300
-    ){
+        if (
+            window.scrollY > 300
+        ) {
 
-        btnScrollTop.classList.remove(
-            "hidden"
-        );
+            btnScrollTop.classList.remove(
+                "hidden"
+            );
 
-    }
-    else{
+        }
+        else {
 
-        btnScrollTop.classList.add(
-            "hidden"
-        );
+            btnScrollTop.classList.add(
+                "hidden"
+            );
 
-    }
-
-});
-
-btnScrollTop.addEventListener(
-"click",
-()=>{
-
-    window.scrollTo({
-
-        top:0,
-
-        behavior:"smooth"
+        }
 
     });
 
-});
-function formatDate(value){
+btnScrollTop.addEventListener(
+    "click",
+    () => {
 
-    if(!value) return "";
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
+    });
+function formatDate(value) {
+
+    if (!value) return "";
 
     const d = new Date(value);
 
-    if(isNaN(d)) return value;
+    if (isNaN(d)) return value;
 
     const day =
-    String(d.getDate())
-    .padStart(2,"0");
+        String(d.getDate())
+            .padStart(2, "0");
 
     const month =
-    String(d.getMonth()+1)
-    .padStart(2,"0");
+        String(d.getMonth() + 1)
+            .padStart(2, "0");
 
     const year =
-    d.getFullYear();
+        d.getFullYear();
 
     return `${day}.${month}.${year}`;
 
