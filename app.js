@@ -273,20 +273,13 @@ function searchBarcode(code) {
 
         );
 
-    if (!selectedProduct) {
-
-        txtProductCode.textContent =
-            "---";
-
-        txtProductDesc.textContent =
-            "Không tìm thấy";
-
-        txtSpecification.textContent =
-            "---";
-
-        return;
-
-    }
+   if (!selectedProduct) {
+    selectedProduct = {
+        ARTCEXR: barcodeInput.value.trim(),
+        TSOBDESC: "Không có master data",
+        "MU/CS": 1
+    };
+}
 
     txtProductCode.textContent =
         selectedProduct.ARTCEXR;
