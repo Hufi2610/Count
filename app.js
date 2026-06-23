@@ -274,12 +274,19 @@ function searchBarcode(code) {
         );
 
    if (!selectedProduct) {
-    selectedProduct = {
-        ARTCEXR: barcodeInput.value.trim(),
-        TSOBDESC: "Không có master data",
-        "MU/CS": 1
-    };
-}
+
+        txtProductCode.textContent =
+            "---";
+
+        txtProductDesc.textContent =
+            "Không tìm thấy";
+
+        txtSpecification.textContent =
+            "---";
+
+        return;
+
+    }
 
     txtProductCode.textContent =
         selectedProduct.ARTCEXR;
@@ -589,13 +596,11 @@ function collectData() {
 
     if (!selectedProduct) {
 
-        alert(
-            "Chưa chọn sản phẩm"
-        );
-
-        return null;
-
-    }
+       selectedProduct = {
+        ARTCEXR: barcodeInput.value.trim(),
+        TSOBDESC: "Không có master data",
+        "MU/CS": 1
+    };
 
     const dateResult =
         validateDate(
